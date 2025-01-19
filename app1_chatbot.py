@@ -18,7 +18,9 @@ def get_bot_response(user_input, excel_data=None):
                 return excel_data.describe().to_string()  # Show a statistical summary
             elif "columns" in user_input.lower():
                 return f"The columns in the data are: {excel_data.columns.tolist()}"  # List the columns of the data
-            elif any(keyword in user_input.lower() for keyword in ["head", 'top', 'show', 'few rows']):
+            elif any(last in user_input.lower() for last in ['last rows','bottom rows','tail']):
+                return str(excel_data.tail())
+            elif any(keyword in user_input.lower() for keyword in ["head", 'top rows', 'show', 'few rows']):
                 return str(st.dataframe(excel_data.head()))  # Show the first 5 rows
             elif 'rows' in user_input.lower() or 'total rows' in user_input.lower():
                 # Ensure that the integer is converted to a string
