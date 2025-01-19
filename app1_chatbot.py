@@ -25,7 +25,7 @@ def get_bot_response(user_input, excel_data=None):
                 return f"The total number of rows is: {str(excel_data.shape[0])}"
             elif "shape" in user_input.lower():
                 return str(excel_data.shape)  # Show the shape of the data
-            elif "info" in user_input.lower() or 'describe' in user_input.lower():
+            elif "info" in user_input.lower() or 'describe' in user_input.lower() or 'schema' in user_input.lower():
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
                 return buffer.getvalue()  # Show general information about the data
