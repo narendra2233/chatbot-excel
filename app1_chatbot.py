@@ -1,7 +1,7 @@
 import openai
 import streamlit as st
 import pandas as pd
-#import io
+import io
 #import os
 #from dotenv import load_dotenv
 
