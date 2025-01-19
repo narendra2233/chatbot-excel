@@ -19,7 +19,7 @@ def get_bot_response(user_input, excel_data=None):
             elif "columns" in user_input.lower():
                 return f"The columns in the data are: {excel_data.columns.tolist()}"  # List the columns of the data
             elif any(last in user_input.lower() for last in ['last rows','bottom rows','tail']):
-                return str(excel_data.tail())
+                return str(st.dataframe(excel_data.tail()))
             elif any(keyword in user_input.lower() for keyword in ["head", 'top rows', 'show', 'few rows']):
                 return str(st.dataframe(excel_data.head()))  # Show the first 5 rows
             elif 'rows' in user_input.lower() or 'total rows' in user_input.lower():
@@ -33,6 +33,10 @@ def get_bot_response(user_input, excel_data=None):
                 excel_data['Transaction amount']=pd.to_numeric(excel_data['Transaction amount'],errors='coerce')
                 maximum_transaction=excel_data[excel_data['Transaction amount']==excel_data['Transaction amount'].max()]
                 return str(maximum_transaction)
+            elif 'Transaction type' in user_input.lower():
+                excel_data=to_numeric(excel_data['Transaction amount'])
+                aggregated_data=excel_data.groupby('Transaction type')['Transaction amount'].sum()
+                return aggregated_data
             elif "info" in user_input.lower() or 'describe' in user_input.lower() or 'schema' in user_input.lower():
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
