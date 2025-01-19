@@ -1,9 +1,9 @@
 import openai
 import streamlit as st
 import pandas as pd
-import io
-import os
-from dotenv import load_dotenv
+#import io
+#import os
+#from dotenv import load_dotenv
 
 # Function to get the response from GPT-3 or GPT-4
 def get_bot_response(user_input, excel_data=None):
@@ -41,8 +41,8 @@ def get_bot_response(user_input, excel_data=None):
                 else:
                       return "Invalid date format. Please use YYYY/MM/DD."
             else:
-                load_dotenv()
-                openai.api_key = os.getenv('openai_api_key')  
+                #load_dotenv()
+                openai.api_key = "API_KEY"   #os.getenv('openai_api_key')  
                 response = openai.Completion.create(
                     model="gpt-3.5-turbo",  # or "gpt-4"
                     messages=[{'role': 'system', 'content': excel_data.to_string(index=False)},
