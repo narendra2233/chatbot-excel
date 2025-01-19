@@ -111,6 +111,8 @@ def main():
                # If the user wants to exit, end the chat
                if "exit" in prompt.lower() or "thank you" in prompt.lower():
                    st.session_state.messages.append({"role": "assistant", "content": "Goodbye! Feel free to come back anytime."})
+                   full_response='Goodbye! Feel free to come back anytime'
+                   message_placeholder.markdown(full_response)
                    st.stop()  # Stop the app from further execution
 
                # Get the chatbot's response based on the Excel data 
