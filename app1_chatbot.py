@@ -27,7 +27,7 @@ def get_bot_response(user_input, excel_data=None):
                 return str(excel_data.shape)  # Show the shape of the data
             elif "unique clients" in user_input.lower() or "distinct clients" in user_input.lower():
                 return str(excel_data['Client name'].unique())
-            elif any(maximum in user_input.lower() for maximum in ['highest transaction','maximum transaction','top transactions']):
+            elif any(maximum in user_input.lower() for maximum in ['highest transaction','maximum*','top transactions']):
                 excel_data['Transaction amount']=pd.to_numeric(excel_data['Transaction amount'],errors='coerce')
                 maximum_transaction=excel_data[excel_data['Transaction amount']==excel_data['Transaction amount'].max()]
                 return str(maximum_transaction)
