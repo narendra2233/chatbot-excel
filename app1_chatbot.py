@@ -25,6 +25,11 @@ def get_bot_response(user_input, excel_data=None):
                 return f"The total number of rows is: {str(excel_data.shape[0])}"
             elif "shape" in user_input.lower():
                 return str(excel_data.shape)  # Show the shape of the data
+            elif "unique clients" in user_input.lower() or "distinct clients" in user_input.lower():
+                return str(excel_data['Client name'].unique())
+            elif any(maximum in user_input.lower() for maximum in ['highest','maximum','top transactions']):
+                maximum_transaction=excel_data[excel_data['Transaction amount']==excel_data['Transaction amount'].max()]
+                return maximum_transaction
             elif "info" in user_input.lower() or 'describe' in user_input.lower() or 'schema' in user_input.lower():
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
