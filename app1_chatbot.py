@@ -33,7 +33,7 @@ def get_bot_response(user_input, excel_data=None):
                 excel_data['Transaction amount']=pd.to_numeric(excel_data['Transaction amount'],errors='coerce')
                 maximum_transaction=excel_data[excel_data['Transaction amount']==excel_data['Transaction amount'].max()]
                 return str(maximum_transaction)
-            elif 'Transaction type' in user_input.lower():
+            elif 'transaction type' in user_input.lower():
                 excel_data=to_numeric(excel_data['Transaction amount'])
                 aggregated_data=excel_data.groupby('Transaction type')['Transaction amount'].sum()
                 return aggregated_data
