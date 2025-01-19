@@ -9,13 +9,6 @@ def get_bot_response(user_input, excel_data=None):
         # Ensure the excel_data is not None
         if excel_data is None:
             return "Error: No data uploaded. Please upload an Excel file first."
-
-        # Check if the 'Transaction date' column exists
-        if 'Transaction date' in excel_data.columns:
-            excel_data['Transaction date'] = pd.to_datetime(excel_data['Transaction date'])
-        else:
-            return "Error: 'Transaction date' column not found in the data."
-
         if user_input:
             # Handle requests related to the Excel data
             if "summary" in user_input.lower():
