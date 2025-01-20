@@ -36,11 +36,11 @@ def get_bot_response(user_input, excel_data=None):
             elif any(least in user_input.lower() for least in ['least transaction','minimum','less transaction*']):
                 excel_data['Transaction amount']=pd.to_numeric(excel_data['Transaction amount'],errors='coerce')
                 least_transaction=excel_data[excel_data['Transaction amount']==excel_data['Transaction amount'].min()]
-                return str(least_transaction)
+                return str(st.dataframe(least_transaction))
             elif 'transaction type' in user_input.lower():
                 excel_data=pd.to_numeric(excel_data['Transaction amount'])
                 aggregated_data=excel_data.groupby('Transaction type')['Transaction amount'].sum()
-                return aggregated_data
+                return str(aggregated_data)
             elif "info" in user_input.lower() or 'describe' in user_input.lower() or 'schema' in user_input.lower():
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
