@@ -41,6 +41,12 @@ def get_bot_response(user_input, excel_data=None):
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
                 return buffer.getvalue()  # Show general information about the data
+            elif "which country *" in user_input.lower():
+                data=excel_data.groupby('country').size()
+                maximum_customers=data.max()
+                return str(maximum_customers)
+                        
+                
             elif "transactions on" in user_input.lower():
                 date_input = user_input.lower().split("transactions on")[-1].strip()  # Extract date after 'transaction on'
                 specific_date = pd.to_datetime(date_input, errors='coerce')
