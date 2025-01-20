@@ -41,7 +41,7 @@ def get_bot_response(user_input, excel_data=None):
                 buffer = io.StringIO()
                 excel_data.info(buf=buffer)
                 return buffer.getvalue()  # Show general information about the data
-            elif "which country *" in user_input.lower():
+            elif "which country" in user_input.lower():
                 data=excel_data.groupby('country').size()
                 maximum_customers=data.max()
                 return str(maximum_customers)
