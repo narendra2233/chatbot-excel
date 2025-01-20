@@ -64,7 +64,7 @@ def get_bot_response(user_input, excel_data=None):
                       return "Invalid date format. Please use YYYY/MM/DD."
             else:
                 #load_dotenv()
-                openai.api_key = "API_KEY"   #os.getenv('openai_api_key')  
+                openai.api_key = "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"   #os.getenv('openai_api_key')  
                 response = openai.Completion.create(
                     model="gpt-3.5-turbo",  # or "gpt-4"
                     messages=[{'role': 'system', 'content': excel_data.to_string(index=False)},
