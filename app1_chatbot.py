@@ -15,7 +15,7 @@ def get_bot_response(user_input, excel_data=None):
         
             # Handle requests related to the Excel data
             if "summary" in user_input.lower():
-                return excel_data.describe().to_string()  # Show a statistical summary
+                return st.dataframe(excel_data.describe().to_string())  # Show a statistical summary
             elif "columns" in user_input.lower():
                 return f"The columns in the data are: {excel_data.columns.tolist()}"  # List the columns of the data
             elif any(last in user_input.lower() for last in ['last rows','bottom rows','tail']):
