@@ -28,12 +28,20 @@ def generate_sql_query(table_name, text, columns):
     elif any(first in text.lower() for first in ['all', 'complete', 'entire', 'full']):
         text = f'SELECT * FROM {table_name}'
         return text
-    elif any(first in text.lower() for first in ['group by year', 'yearly', 'by year']):
+    elif any(yearly in text.lower() for yearly in ['group by year', 'yearly', 'by year','on year']):
         text = f"""
-        SELECT strftime('%Y', "Transaction date") AS year, SUM("Transaction amount") AS total_sales
+        SELECT strftime('%Y', Date(substr("Transaction date", 7, 4) || '-' || substr("Transaction date", 1, 2) || '-' || substr("Transaction date", 4, 2))) AS year, SUM("Transaction amount") AS total_sales
         FROM {table_name}
         GROUP BY year
         ORDER BY year
+        """     
+        return text
+    elif any(monthly in text.lower() for monthly in ['group by month', 'monthly', 'by month','month']):
+        text = f"""
+        strftime('%m', DATE(substr("Transaction date", 7, 4) || '-' || substr("Transaction date", 4, 2) || '-' || substr("Transaction date", 1, 2))) AS month, SUM("Transaction amount") AS total_sales
+        FROM {table_name}
+        GROUP BY month
+        ORDER BY month
         """     
         return text
     elif any(bad in text.lower() for bad in ['outliers','bad data','wrong data']):
@@ -55,7 +63,6 @@ def generate_sql_query(table_name, text, columns):
      WHERE
     "Transaction amount" < (iqr.q1 - 1.5 * iqr.iqr)
     OR "Transaction amount" > (iqr.q3 + 1.5 * iqr.iqr) """
-    return text
 
     prompt = f"""
 You are a ChatGPT language model that can generate SQL queries.
@@ -135,12 +142,12 @@ def main():
          justify-content: center;
          align-items: center;
          padding: 20px;
-}
-.input-container {
-  background-color: #ffffff;
-  padding: 20px;
-  width: 50%
-}
+          }
+       .input-container {
+       background-color: #ffffff;
+       padding: 20px;
+       width: 50%
+       }
        .container{
 
           display: flex;
@@ -148,7 +155,7 @@ def main():
           height: 100%;
           max-width: 1200px;
 
-}
+       }
        .container .greeting-container {
           background-color: #00838f; 
             color: white; 
@@ -158,31 +165,15 @@ def main():
             width: 100%;  /* Ensure it spans the width */
             margin: 0;    /* Remove any margin */
         }
-.greeting-container h1 {
-  font-size: 2rem;
-  margin-bottom: 10px;
-}
+       .greeting-container h1 {
+       font-size: 2rem;
+       margin-bottom: 10px;
+       }
 
-.greeting-container p {
-  font-size: 1.1rem;
-  line-height: 1.6;
-}
-
-.instructions {
-  text-align: left;
-  margin-top: 20px;
-}
-
-.instructions h2 {
-  font-size: 1.3rem;
-  margin-bottom: 10px;
-}
-
-.instructions ol {
-  list-style-type: decimal;
-  padding-left: 20px;
-}
-        
+      .greeting-container p {
+      font-size: 1.1rem;
+      line-height: 1.6;
+      }        
     </style>
 <div class="container">
     <div class="greeting-container">
