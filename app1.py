@@ -14,7 +14,49 @@ def get_table_columns(cursor, table_name):
 # Function to generate SQL query from input text using ChatGPT
 def generate_sql_query(table_name, text, columns):
     # OpenAI API key (replace this with your actual key or load from an environment variable)
-    openai.api_key = "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"
+    openai.api_key = "api_key"
+    
+    if any(first in text.lower() for first in ['top','few','first','head']):
+        text = f'SELECT * FROM {table_name} LIMIT 5'
+        return text
+    elif any(schema in text.lower() for schema in ['describe','schema','structure','definition']):
+        text=f'PRAGMA table_info({table_name})'
+        return text
+    elif any(last in text.lower() for last in ['last','tail','down','bottom','final','end']):
+        last=f"SELECT * FROM {table_name} ORDER BY 'Transaction amount' DESC LIMIT 5"
+        return last
+    elif any(first in text.lower() for first in ['all', 'complete', 'entire', 'full']):
+        text = f'SELECT * FROM {table_name}'
+        return text
+    elif any(first in text.lower() for first in ['group by year', 'yearly', 'by year']):
+        text = f"""
+        SELECT strftime('%Y', "Transaction date") AS year, SUM("Transaction amount") AS total_sales
+        FROM {table_name}
+        GROUP BY year
+        ORDER BY year
+        """     
+        return text
+    elif any(bad in text.lower() for bad in ['outliers','bad data','wrong data']):
+        text=f"""
+    WITH stats AS (
+    SELECT
+        percentile_cont(0.25) WITHIN GROUP (ORDER BY "Transaction amount") AS q1,
+        percentile_cont(0.75) WITHIN GROUP (ORDER BY "Transaction amount") AS q3
+    FROM {table_name}
+     ),
+    iqr AS (
+    SELECT q1, q3, (q3 - q1) AS iqr
+    FROM stats
+    )
+    SELECT
+    'Transaction ID',
+    'Transaction amount'
+     FROM {table_name}, iqr
+     WHERE
+    "Transaction amount" < (iqr.q1 - 1.5 * iqr.iqr)
+    OR "Transaction amount" > (iqr.q3 + 1.5 * iqr.iqr) """
+    return text
+
     prompt = f"""
 You are a ChatGPT language model that can generate SQL queries.
 Please provide a natural language input text, and I will generate the corresponding SQL query for you.
@@ -57,25 +99,12 @@ def get_bot_response(cursor, table_name, user_input, columns, excel_data=None):
             return "Error: No data uploaded. Please upload an Excel file first."
         
         if user_input:
-            if "summary" in user_input.lower():
-                return st.dataframe(excel_data.describe().to_string())
-            elif "columns" in user_input.lower():
+            if "columns" in user_input.lower():
                 return f"The columns in the data are: {excel_data.columns.tolist()}"
-            elif "transactions on" in user_input.lower():
-                date_input = user_input.lower().split("transactions on")[-1].strip()
-                specific_date = pd.to_datetime(date_input, errors='coerce')
-                if specific_date:
-                    filtered_data = excel_data[excel_data['Transaction date'] == specific_date]
-                    if filtered_data.empty:
-                        return f"No Transaction found on {specific_date}."
-                    else:
-                        return str(filtered_data)
-                else:
-                    return "Invalid date format. Please use YYYY/MM/DD."
             else:
                 sql_query = generate_sql_query(table_name, user_input, columns)
                 if sql_query:
-                    result = execute_sql_query(cursor, sql_query)
+                    result = st.dataframe(execute_sql_query(cursor, sql_query))
                     return result if result else "No data returned from the query."
         else:
             return "Error: Please enter your input."
@@ -84,19 +113,98 @@ def get_bot_response(cursor, table_name, user_input, columns, excel_data=None):
 
 # Streamlit app
 def main():
-    conn = sqlite3.connect("chatgb.db")
+    conn = sqlite3.connect("chatgb.db") 
     cursor = conn.cursor()
 
     # Streamlit app title
     st.title("AI Chatbot with Excel File Handling")
 
-    # Greeting message
-    if "history" not in st.session_state or len(st.session_state.history) == 0:
-        st.markdown("""
-        **Hello and welcome!** 👋 I'm your AI-powered assistant, ready to help you explore and interact with your data.
-        🗂️ **Upload your Excel file** below and ask me anything about the data! Whether you want to know the summary, columns, or even details like the shape of your dataset – I'm here to assist.
-        Let’s get started! Feel free to upload your file and ask away.
-        """)
+   # Function to display the greeting and instructions
+    st.markdown("""
+    <style>
+       {
+           margin: 0;
+           padding: 0;
+           box-sizing: border-box;
+        }
+       body {
+         font-family: Arial, sans-serif;
+         background-color: #f4f4f9;
+         height: 100vh;
+         display: flex;
+         justify-content: center;
+         align-items: center;
+         padding: 20px;
+}
+.input-container {
+  background-color: #ffffff;
+  padding: 20px;
+  width: 50%
+}
+       .container{
+
+          display: flex;
+          width: 100%;
+          height: 100%;
+          max-width: 1200px;
+
+}
+       .container .greeting-container {
+          background-color: #00838f; 
+            color: white; 
+            padding: 30px; 
+            border-radius: 10px;
+            text-align: left;
+            width: 100%;  /* Ensure it spans the width */
+            margin: 0;    /* Remove any margin */
+        }
+.greeting-container h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.greeting-container p {
+  font-size: 1.1rem;
+  line-height: 1.6;
+}
+
+.instructions {
+  text-align: left;
+  margin-top: 20px;
+}
+
+.instructions h2 {
+  font-size: 1.3rem;
+  margin-bottom: 10px;
+}
+
+.instructions ol {
+  list-style-type: decimal;
+  padding-left: 20px;
+}
+        
+    </style>
+<div class="container">
+    <div class="greeting-container">
+        <h1>Hello and welcome! 👋</h1>
+        <p>I'm your AI-powered assistant, here to help you solve queries related to your data.</p> 
+        <h2>How to Get Started:</h2>
+        <ol>
+            <li>📂 <strong>Upload your Excel file</strong> below.</li>
+            <li>Once uploaded, feel free to ask me anything about the data, such as:
+                <ul>
+                    <li>📊 <strong>Summary of the data</strong></li>
+                    <li>🔢 <strong>Details about the columns</strong></li>
+                    <li>📏 <strong>The shape of the dataset</strong></li>
+                </ul>
+            </li>
+            <li>Let’s get started! Upload your file first, and then ask away!</li>
+        </ol>
+    </div>
+    <div class="input-container"></div>
+</div>
+    """, unsafe_allow_html=True)
+
 
     # Initialize session state
     if "messages" not in st.session_state:
@@ -133,6 +241,7 @@ def main():
 
     # Get user input after file is uploaded
     if uploaded_file is not None and st.session_state.excel_data is not None:
+        
         user_input = st.chat_input("Ask about the data:")
         table_name = 'TRANSACTION1'
         columns = get_table_columns(cursor, table_name)
