@@ -104,6 +104,7 @@ def get_bot_response(table_name,user_input,columns, excel_data=None):
                       return "Invalid date format. Please use YYYY/MM/DD."
             else:
                 #load_dotenv()
+                global sql_query
                 sql_query = generate_sql_query(table_name, text, columns)
                 print("Generated SQL query: ", sql_query)
 
