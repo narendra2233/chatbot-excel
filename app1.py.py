@@ -2,11 +2,51 @@ import openai
 import streamlit as st
 import pandas as pd
 import io
+import sqlite3
 #import os
 #from dotenv import load_dotenv
 
+# Function to get table columns from SQLite database
+def get_table_columns(table_name):
+    cursor.execute(f"PRAGMA table_info({table_name})")
+    columns = cursor.fetchall()
+    print("Columns in the table:", columns)
+    return [column[1] for column in columns]
+
+
+# Function to generate SQL query from input text using ChatGPT
+def generate_sql_query(table_name, text, columns):
+    prompt = f"""
+You are a ChatGPT language model that can generate SQL queries.
+Please provide a natural language input text, and I will generate the corresponding SQL query for you.
+The table name is {table_name} and corresponding columns are {columns}.
+
+Input: {text}
+SQL Query:
+"""
+    print("Prompt for OpenAI API:", prompt)
+    response = openai.ChatCompletion.create(
+        model="gpt-4o-mini",  # Make sure to use a valid model name (e.g., "gpt-4")
+        messages=[{"role": "user", "content": prompt}]
+    )
+    sql_query = response['choices'][0]['message']['content'].strip()
+    
+    # Clean up the query string to remove markdown code block formatting
+    # Remove ```sql and ```, if present
+    if sql_query.startswith("```sql"):
+        sql_query = sql_query[6:].strip()  # Remove the opening ```sql
+    if sql_query.endswith("```"):
+        sql_query = sql_query[:-3].strip()  # Remove the closing ```
+    
+    return sql_query
+
+# Function to execute SQL query on SQLite database
+def execute_sql_query(query):
+    cursor.execute(query)
+    result = cursor.fetchall()
+    return result
 # Function to get the response from GPT-3 or GPT-4
-def get_bot_response(user_input, excel_data=None):
+def get_bot_response(table_name,user_input,columns, excel_data=None):
     try:
         # Ensure the excel_data is not None
         if excel_data is None:
@@ -64,15 +104,9 @@ def get_bot_response(user_input, excel_data=None):
                       return "Invalid date format. Please use YYYY/MM/DD."
             else:
                 #load_dotenv()
-                openai.api_key = "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"   #os.getenv('openai_api_key')  
-                response = openai.Completion.create(
-                    model="gpt-3.5-turbo",  # or "gpt-4"
-                    messages=[{'role': 'system', 'content': excel_data.to_string(index=False)},
-                              {"role": "user", "content": user_input}],
-                    max_tokens=150
-                )
-                bot_message = response['choices'][0]['message']['content']
-                return bot_message
+                sql_query = generate_sql_query(table_name, text, columns)
+                print("Generated SQL query: ", sql_query)
+
         else:
             return "Error: Please enter your input."
     except Exception as e:
@@ -80,6 +114,10 @@ def get_bot_response(user_input, excel_data=None):
 
 # Streamlit app
 def main():
+    conn=sqlite3.connect("chatgb.db")
+    global cursor
+    cursor=conn.cursor()
+    
     # App title
     st.title("AI Chatbot with Excel File Handling")
 
@@ -111,6 +149,15 @@ def main():
          st.write(f"Excel Data loaded: {st.session_state.excel_data.shape}")
          st.write("Preview of the data:")
          st.write(st.session_state.excel_data.head())
+    cursor.execute("""CREATE TABLE IF NOT EXISTS TRANSACTION1("Transaction ID" TEXT,
+    "Transaction date" TEXT,
+    "Client name" TEXT,
+    "Transaction type" TEXT,
+    "Transaction amount" REAL)""")
+    if st.session_state.excel_data is not None and not st.session_state.excel_data.empty:
+
+         st.session_state.excel_data.to_sql('TRANSACTION1',conn,if_exists='replace', index=False)
+    
 
     # Display chat history
     for message in st.session_state.messages:
@@ -119,14 +166,20 @@ def main():
 
     # Get user input after file is uploaded
     if uploaded_file is not None and st.session_state.excel_data is not None:
-         prompt = st.chat_input("Ask about the data:")
+         global text
+         text = st.chat_input("Ask about the data:")
+         global table_name
+         table_name='TRANSACTION1'
+         global columns
+         columns=get_table_columns(table_name)
 
-         if prompt:
-            st.session_state.messages.append({"role": "user", "content": prompt})
+
+         if text:
+            st.session_state.messages.append({"role": "user", "content": text})
 
             # Display the user message
             with st.chat_message("user"):
-               st.markdown(prompt)
+               st.markdown(text)
 
             # Get the chatbot's response
             with st.chat_message("assistant"):
@@ -134,20 +187,28 @@ def main():
                full_response = "" 
 
                # If the user wants to exit, end the chat
-               if "exit" in prompt.lower() or "thank you" in prompt.lower():
+               if "exit" in text.lower() or "thank you" in text.lower():
                    st.session_state.messages.append({"role": "assistant", "content": "Goodbye! Feel free to come back anytime."})
                    full_response='Goodbye! Feel free to come back anytime'
                    message_placeholder.markdown(full_response)
                    st.stop()  # Stop the app from further execution
 
                # Get the chatbot's response based on the Excel data 
-               full_response += get_bot_response(prompt, st.session_state.excel_data)
+               global query
+               query = get_bot_response(table_name,text, columns,st.session_state.excel_data)
+               # If the SQL query was generated successfully, execute it
+               if sql_query:
+                    result = execute_sql_query(query)
+                    print("ChatGPT Response=>", result)
+                    
+               
+            
 
                # Update the response in the chat
-               message_placeholder.markdown(full_response)
+               message_placeholder.markdown(result)
 
             # Append assistant's response to the session state
-            st.session_state.messages.append({"role": "assistant", "content": full_response})
+            st.session_state.messages.append({"role": "assistant", "content": result})
 
     else:
         st.info("Please upload an Excel file to start chatting with the bot.")
