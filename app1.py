@@ -14,7 +14,7 @@ def get_table_columns(cursor, table_name):
 # Function to generate SQL query from input text using ChatGPT
 def generate_sql_query(table_name, text, columns):
     # OpenAI API key (replace this with your actual key or load from an environment variable)
-    openai.api_key = "api_key"
+    openai.api_key = "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"
     prompt = f"""
 You are a ChatGPT language model that can generate SQL queries.
 Please provide a natural language input text, and I will generate the corresponding SQL query for you.
