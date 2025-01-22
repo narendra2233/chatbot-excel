@@ -14,7 +14,7 @@ def get_table_columns(cursor, table_name):
 # Function to generate SQL query from input text using ChatGPT
 def generate_sql_query(table_name, text, columns):
     # OpenAI API key (replace this with your actual key or load from an environment variable)
-    openai.api_key = "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"
+    openai.api_key = "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"
     
     if any(first in text.lower() for first in ['top','few','first','head']):
         text = f'SELECT * FROM {table_name} LIMIT 5'
